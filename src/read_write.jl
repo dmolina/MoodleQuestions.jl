@@ -252,7 +252,6 @@ function read_txt(io::IO)::Quiz
                 if (right == -1)
                     throw("Error: neither option of question '$question' is right")
                 end
-                println("Add Question")
                 push!(questions, QuestionUnique(tag=category,
                                                 question=question, options=options, right=right,
                                                 shuffle=shuffle))
