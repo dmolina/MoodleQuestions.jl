@@ -2,6 +2,8 @@ using Parameters
 using LightXML
 using OrderedCollections
 
+@enum QuestionType unique=1 boolean=2
+
 @with_kw struct QuestionUnique
     tag::String
     question::String
@@ -10,8 +12,15 @@ using OrderedCollections
     shuffle::Bool
 end
 
+@with_kw struct QuestionTrueFalse
+    tag::String
+    question::String
+    right::Bool
+end
+
 @with_kw struct Quiz
     uniques::Vector{QuestionUnique}=QuestionUnique[]
+    booleans::Vector{QuestionTrueFalse}=QuestionTrueFalse[]
     categories::Vector{String}=String[]
 end
 
@@ -49,9 +58,13 @@ function read_swad(fname::AbstractString)::Quiz
     categories = String[]
 
     for xquestion in questions
+        typestr = attribute(xquestion, "type")
+        type::QuestionType = unique
 
-        if attribute(xquestion, "type") != "uniqueChoice"
+        if !(typestr in ["uniqueChoice", "TF"])
             continue
+        elseif typestr == "TF"
+            type = boolean
         end
 
         tags = find_element(xquestion, "tags")
@@ -73,29 +86,113 @@ function read_swad(fname::AbstractString)::Quiz
         @assert !isnothing(text)
         question = replace_utf8(content(text))
 
-        answer = find_element(xquestion, "answer")
-        shuffle = attribute(answer, "shuffle")=="yes"
+        if type == boolean
+            answer = parse(Bool, content(find_element(xquestion, "answer")))
+            shuffle = true
+            push!(quiz.booleans, QuestionTrueFalse(tag=tag, question=question, right=answer))
+        elseif type == unique
+            answer = find_element(xquestion, "answer")
+            shuffle = attribute(answer, "shuffle")=="yes"
 
-        xoptions = answer["option"]
-        options = String[]
-        right = -1
+            xoptions = answer["option"]
+            options = String[]
+            right = -1
 
-        for xoption in xoptions
-            push!(options, content(find_element(xoption, "text")))
+            for xoption in xoptions
+                push!(options, content(find_element(xoption, "text")))
 
-            if attribute(xoption, "correct")=="yes"
-                right=length(options)
+                if attribute(xoption, "correct")=="yes"
+                    right=length(options)
+                end
             end
-        end
 
-        options = replace_utf8.(options)
-        push!(quiz.uniques, QuestionUnique(tag=tag, question=question,
+            options = replace_utf8.(options)
+            push!(quiz.uniques, QuestionUnique(tag=tag, question=question,
                                            options=options,
                                            right=right,
-                                           shuffle=shuffle))
+                                               shuffle=shuffle))
+        end
     end
 
     return quiz
+end
+
+"""
+Create the header of a question for Moodle
+
+create_header_question_moodle(xroot, tag, type)
+"""
+
+function create_header_question_moodle(xroot, question::AbstractString, type::QuestionType, shuffle, i)
+    xquestion = new_child(xroot, "question")
+
+    if (type == unique)
+        set_attribute(xquestion, "type", "multichoice")
+    elseif (type == boolean)
+        set_attribute(xquestion, "type", "truefalse")
+    else
+        throw("Error, type '$type' is unknown")
+    end
+
+    name = new_child(new_child(xquestion, "name"), "text")
+    add_text(name, "Question_$(i)")
+    questiontext = new_child(xquestion, "questiontext")
+    set_attribute(questiontext, "format", "html")
+    text = new_child(questiontext, "text")
+    add_text(text, "$(question)")
+    generalfeedback = new_child(xquestion, "generalfeedback")
+    # generalfeedback empty
+    set_attribute(generalfeedback, "format", "html")
+    new_child(generalfeedback, "text")
+    # parameters
+    if type == unique
+        params = OrderedDict("generalfeedback" => "1", "penalty" => "", "hidden" => "0", "penalty"=>"0",
+                         "single" => "true", "shuffleanswers" => shuffle ? "true" : "false",
+                                    "answernumbering" => "abc")
+    else
+        params = OrderedDict("generalfeedback" => "1", "penalty" => "", "hidden" => "0", "penalty"=>"0")
+    end
+
+    for (key, value) in params
+        node = new_child(xquestion, key)
+        add_text(node, value)
+    end
+
+    if (type == unique)
+
+    end
+
+    feedbacks = OrderedDict("correctfeedback" => "Respuesta correcta",
+                            "partiallycorrectfeedback" => "Respuesta parcialmente correcta",
+                            "incorrectfeedback" => "Respuesta incorrecta")
+
+    for (feedback, message) in feedbacks
+        node = new_child(xquestion, feedback)
+        set_attribute(node, "format", "html")
+        text = new_child(node, "text")
+        add_text(text, message)
+    end
+
+    return xquestion
+end
+
+function add_answer_moodle(xquestion, description::AbstractString; format="html", right::Bool=true)
+    answer=new_child(xquestion, "answer")
+
+    if right
+        fraction = "100"
+    else
+        fraction = "0"
+    end
+
+    set_attribute(answer, "fraction", fraction)
+    set_attribute(answer, "format", format)
+    text = new_child(answer, "text")
+    add_text(text, "$(description)")
+    feedback = new_child(answer, "feedback")
+    set_attribute(feedback, "format", "html")
+    text = new_child(feedback, "text")
+    add_text(text, "")
 end
 
 """
@@ -124,60 +221,25 @@ function save_to_moodle_category(quiz::Quiz, category::AbstractString)
             continue
         end
 
-        xquestion = new_child(xroot, "question")
-        set_attribute(xquestion, "type", "multichoice")
-        name = new_child(new_child(xquestion, "name"), "text")
-        add_text(name, "Question_$(i)")
-        questiontext = new_child(xquestion, "questiontext")
-        set_attribute(questiontext, "format", "html")
-        text = new_child(questiontext, "text")
-        add_text(text, "$(question.question)")
-        generalfeedback = new_child(xquestion, "generalfeedback")
-        # generalfeedback empty
-        set_attribute(generalfeedback, "format", "html")
-        new_child(generalfeedback, "text")
-        # parameters
-        params = OrderedDict("generalfeedback" => "1", "penalty" => "", "hidden" => "0", "penalty"=>".333",
-                      "single" => "true", "shuffleanswers" => question.shuffle ? "true" : "false",
-                      "answernumbering" => "abc")
-
-        for (key, value) in params
-            node = new_child(xquestion, key)
-            add_text(node, value)
-        end
-
-        feedbacks = OrderedDict("correctfeedback" => "Respuesta correcta",
-                        "partiallycorrectfeedback" => "Respuesta parcialmente correcta",
-                        "incorrectfeedback" => "Respuesta incorrecta")
-
-        for (feedback, message) in feedbacks
-            node = new_child(xquestion, feedback)
-            set_attribute(node, "format", "html")
-            text = new_child(node, "text")
-            add_text(text, message)
-        end
-
+        xquestion = create_header_question_moodle(xroot, question.question, question.shuffle, QuestionType::unique, i)
         node = new_child(xquestion, "shownumcorrect")
 
         # Show the answers
         for (posi,option) in enumerate(question.options)
-            answer=new_child(xquestion, "answer")
-
-            if question.right == posi
-                fraction = "100"
-            else
-                fraction = "0"
-            end
-
-            set_attribute(answer, "fraction", fraction)
-            set_attribute(answer, "format", "html")
-            text = new_child(answer, "text")
-            add_text(text, "$(option)")
-            feedback = new_child(answer, "feedback")
-            set_attribute(feedback, "format", "html")
-            text = new_child(feedback, "text")
-            add_text(text, "")
+            add_answer_moodle(xquestion, option, right = (posi == question.right))
         end
+    end
+    # Put all the questions
+    for (i, question) in enumerate(quiz.booleans)
+        if question.tag != category
+            continue
+        end
+
+        xquestion = create_header_question_moodle(xroot, question.question, boolean, true, i)
+
+        # Show the answers
+        add_answer_moodle(xquestion, "true", format="moodle_auto_format", right=(question.right==true))
+        add_answer_moodle(xquestion, "false", format="moodle_auto_format", right=(question.right==false))
     end
 
     return xdoc

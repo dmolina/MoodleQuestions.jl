@@ -12,7 +12,7 @@ from a text file.
 
 ## Limitations
 
-This package is currently limited to multichoice questions.
+This package is currently limited to multichoice and truefalse questions.
 
 ## Import functionality
 
