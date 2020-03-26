@@ -248,12 +248,21 @@ function read_txt(io::IO)::Quiz
                 shuffle = true
             end
         elseif !isempty(line) && !startswith(line, r"[+-]")
+            if !isempty(question)
+                if (right == -1)
+                    throw("Error: neither option of question '$question' is right")
+                end
+                println("Add Question")
+                push!(questions, QuestionUnique(tag=category,
+                                                question=question, options=options, right=right,
+                                                shuffle=shuffle))
+                shuffle = true
+            end
             question = line
             options = String[]
             right = -1
         else
             moption = match(r"([+-])\s*(.*)$", line)
-
 
             if !isempty(line) !isnothing(moption)
                 @assert !isempty(category)
