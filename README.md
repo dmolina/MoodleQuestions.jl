@@ -1,5 +1,10 @@
 # MoodleQuestions
 
+[![Stable](https://img.shields.io/badge/docs-stable-blue.svg)](https://dmolina.github.io/MoodleQuestions.jl/stable)
+[![Dev](https://img.shields.io/badge/docs-dev-blue.svg)](https://dmolina.github.io/MoodleQuestions.jl/dev)
+[![Build Status](https://travis-ci.com/dmolina/MoodleQuestions.jl.svg?branch=master)](https://travis-ci.com/dmolina/MoodleQuestions.jl)
+[![Coverage](https://codecov.io/gh/dmolina/MoodleQuestions.jl/branch/master/graph/badge.svg)](https://codecov.io/gh/dmolina/MoodleQuestions.jl)
+
 This package manager questions for the [Moodle educational
 tool](https://moodle.org/).
 
@@ -16,7 +21,7 @@ This package is currently limited to multichoice and truefalse questions.
 
 ## Installation
 
-Like other Julia packages, you may checkout QuestionsMoodle from official repo, as
+Like other Julia packages, you may checkout MoodleQuestions from official repo, as
 
 ```julia
 using Pkg;  Pkg.add("MoodleQuestions")
