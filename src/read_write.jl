@@ -297,6 +297,7 @@ function read_txt(io::IO)::Quiz
         mcat = match(r"^\*\s*(.*)$", line)
 
         if !isnothing(mcat)
+            oldcategory = category
             category = mcat.captures[1]
             push!(categories, category)
 
@@ -304,15 +305,17 @@ function read_txt(io::IO)::Quiz
                 if (right == -1)
                     throw("Error: neither option of question '$question' is right")
                 end
-                push!(questions, QuestionUnique(tag=category,
+                push!(questions, QuestionUnique(tag=oldcategory,
                                                 question=question, options=options, right=right,
                                                 shuffle=shuffle))
                 shuffle = true
             end
-        elseif !isempty(line) && !startswith(line, r"[+-]")
+        elseif !startswith(line, r"[+-]")
             if !isempty(question)
+                question *= "\n$line"
+            elseif !isempty(options)
                 if (right == -1)
-                    throw("Error: neither option of question '$question' is right")
+                    throw("Error: neither option of question '$line' is right")
                 end
                 push!(questions, QuestionUnique(tag=category,
                                                 question=question, options=options, right=right,
@@ -337,7 +340,7 @@ function read_txt(io::IO)::Quiz
                     right = length(options)
                 end
 
-                if occursin(r"\b[ABCD]\b", line)
+                if occursin(r"\b[ABCDEF]\b", line)
                     shuffle = false
                 end
             end
