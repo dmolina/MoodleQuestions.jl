@@ -1,4 +1,4 @@
-# QuestionsMoodle
+# MoodleQuestions
 
 This package manager questions for the [Moodle educational
 tool](https://moodle.org/).
@@ -13,6 +13,20 @@ from a text file.
 ## Limitations
 
 This package is currently limited to multichoice and truefalse questions.
+
+## Installation
+
+Like other Julia packages, you may checkout QuestionsMoodle from official repo, as
+
+```julia
+using Pkg;  Pkg.add("MoodleQuestions")
+```
+
+This package is expecting to be included. Until now you can do:
+
+```julia
+Pkg.add("https://github.com/dmolina/MoodleQuestions")
+```
 
 ## Import functionality
 
@@ -83,7 +97,7 @@ This package can be used to create a main program to create questions from a
 text file. The function could be similar tool
 
 ```julia
-using QuestionsMoodle
+using MoodleQuestions
 
 function main(ARGS)
     if length(ARGS)!=2

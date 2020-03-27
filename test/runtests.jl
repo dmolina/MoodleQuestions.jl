@@ -1,4 +1,4 @@
-using QuestionsMoodle
+using MoodleQuestions
 using Test
 
 @testset "ReadFromSWAD" begin

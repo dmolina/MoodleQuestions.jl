@@ -1,4 +1,4 @@
-using QuestionsMoodle
+using MoodleQuestions
 
 function main(ARGS)
     if length(ARGS)!=2
