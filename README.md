@@ -3,6 +3,7 @@
 [![Dev](https://img.shields.io/badge/docs-dev-blue.svg)](https://dmolina.github.io/MoodleQuestions.jl/dev)
 [![Build Status](https://travis-ci.com/dmolina/MoodleQuestions.jl.svg?branch=master)](https://travis-ci.com/dmolina/MoodleQuestions.jl)
 [![Coverage](https://codecov.io/gh/dmolina/MoodleQuestions.jl/branch/master/graph/badge.svg)](https://codecov.io/gh/dmolina/MoodleQuestions.jl)
+[![DOI](https://zenodo.org/badge/249694680.svg)](https://zenodo.org/badge/latestdoi/249694680)
 
 This package manager questions for the [Moodle educational
 tool](https://moodle.org/).
