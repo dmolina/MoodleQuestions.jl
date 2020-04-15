@@ -123,7 +123,7 @@ Create the header of a question for Moodle
 create_header_question_moodle(xroot, tag, type)
 """
 
-function create_header_question_moodle(xroot, question::AbstractString, type::QuestionType, shuffle, i)
+function create_header_question_moodle(xroot, question::AbstractString, type::QuestionType, shuffle::Bool, i)
     xquestion = new_child(xroot, "question")
 
     if (type == unique)
