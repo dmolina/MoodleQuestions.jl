@@ -311,9 +311,8 @@ function read_txt(io::IO)::Quiz
                 shuffle = true
             end
         elseif !startswith(line, r"[+-]")
-            if !isempty(question)
-                question *= "\n$line"
-            elseif !isempty(options)
+
+            if !isempty(options)
                 if (right == -1)
                     throw("Error: neither option of question '$line' is right")
                 end
@@ -321,10 +320,15 @@ function read_txt(io::IO)::Quiz
                                                 question=question, options=options, right=right,
                                                 shuffle=shuffle))
                 shuffle = true
+
+                question = line
+                options = String[]
+                right = -1
+            elseif !isempty(question)
+                question *= "\n$line"
+            else
+                question = line;
             end
-            question = line
-            options = String[]
-            right = -1
         else
             moption = match(r"([+-])\s*(.*)$", line)
 
