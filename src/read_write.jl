@@ -221,7 +221,7 @@ function save_to_moodle_category(quiz::Quiz, category::AbstractString)
             continue
         end
 
-        xquestion = create_header_question_moodle(xroot, question.question, QuestionType::unique, question.shuffle, i)
+        xquestion = create_header_question_moodle(xroot, question.question, unique, question.shuffle, i)
         node = new_child(xquestion, "shownumcorrect")
 
         # Show the answers
