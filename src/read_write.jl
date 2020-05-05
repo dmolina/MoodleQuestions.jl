@@ -320,6 +320,13 @@ function read_txt(io::IO)::Quiz
                                                 shuffle=shuffle))
                 shuffle = true
             end
+        elseif endswith(line, r"[+-]")
+            question = strip(line[1:end-1])
+            right = (line[end] == '+')
+            push!(booleanQuestions, QuestionTrueFalse(tag=category,
+                                                      question=question,
+                                                      right=right))
+            question = ""
         elseif !startswith(line, r"[+-]")
 
             if !isempty(options)
@@ -344,6 +351,12 @@ function read_txt(io::IO)::Quiz
                 else
                     question = line
                 end
+            elseif endswith(line, r"[+-]")
+                question = strip(line[1:end-1])
+                right = (line[end] == '+')
+                push!(booleanQuestions, QuestionTrueFalse(tag=category,
+                                                          question=question,
+                                                          right=right))
             elseif !isempty(question)
                 question *= "\n$line"
             else
