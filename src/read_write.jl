@@ -285,6 +285,7 @@ function read_txt(io::IO)::Quiz
     shuffle = true
     right = -1
     options = String[]
+    booleanQuestions = QuestionTrueFalse[]
     questions = QuestionUnique[]
 
     for line in readlines(io)
@@ -320,10 +321,20 @@ function read_txt(io::IO)::Quiz
                                                 question=question, options=options, right=right,
                                                 shuffle=shuffle))
                 shuffle = true
-
-                question = line
                 options = String[]
                 right = -1
+
+                # True/False Question
+                if endswith(line, r"[+-]")
+                    question = strip(line[1:end-1])
+                    right = (line[end] == '+')
+                    push!(booleanQuestions, QuestionTrueFalse(tag=category,
+                                                              question=question,
+                                                              right=right))
+                    question = ""
+                else
+                    question = line
+                end
             elseif !isempty(question)
                 question *= "\n$line"
             else
@@ -352,11 +363,19 @@ function read_txt(io::IO)::Quiz
     end
 
     if (question != "")
-        push!(questions, QuestionUnique(tag=category,
-                                        question=question, options=options, right=right,
-                                        shuffle=shuffle))
+        if endswith(question, r"[+-]")
+            right = (question[end] == '+')
+            question = strip(question[1:end-1])
+            push!(booleanQuestions, QuestionTrueFalse(tag=category,
+                                                      question=question,
+                                                      right=right))
+        else
+            push!(questions, QuestionUnique(tag=category,
+                                            question=question, options=options, right=right,
+                                            shuffle=shuffle))
+        end
     end
 
 
-    return  Quiz(categories=categories, uniques=questions)
+    return  Quiz(categories=categories, uniques=questions, booleans=booleanQuestions)
 end
