@@ -138,7 +138,7 @@ function create_header_question_moodle(xroot, question::AbstractString, type::Qu
     if penalty == 0
         penalty_str = "0"
     else
-        penalty_str = String(-penalty)
+        penalty_str = "-$(penalty)"
     end
 
     name = new_child(new_child(xquestion, "name"), "text")
@@ -208,7 +208,7 @@ Save the quiz into a group of categories.
 
     save_to_moodle(quiz::Quiz, category::AbstractString)
 """
-function save_to_moodle_category(quiz::Quiz, category::AbstractString, penalty=0)
+function save_to_moodle_category(quiz::Quiz, category::AbstractString; penalty_options=0, penalty_boolean=0)
     xdoc = XMLDocument()
     # Create test
     xroot = create_root(xdoc, "quiz")
@@ -229,7 +229,7 @@ function save_to_moodle_category(quiz::Quiz, category::AbstractString, penalty=0
         end
 
         xquestion = create_header_question_moodle(xroot, question.question, unique, question.shuffle, i,
-                                                  penalty)
+                                                  penalty_options)
         node = new_child(xquestion, "shownumcorrect")
 
         # Show the answers
@@ -243,7 +243,7 @@ function save_to_moodle_category(quiz::Quiz, category::AbstractString, penalty=0
             continue
         end
 
-        xquestion = create_header_question_moodle(xroot, question.question, boolean, true, i, penalty)
+        xquestion = create_header_question_moodle(xroot, question.question, boolean, true, i, penalty_boolean)
 
         # Show the answers
         add_answer_moodle(xquestion, "true", format="moodle_auto_format", right=(question.right==true))
@@ -253,11 +253,12 @@ function save_to_moodle_category(quiz::Quiz, category::AbstractString, penalty=0
     return xdoc
 end
 
-function save_to_moodle(quiz::Quiz, template::AbstractString, penalty=0)
+function save_to_moodle(quiz::Quiz, template::AbstractString; penalty_options=0, penalty_boolean=0)
     for category in quiz.categories
         fname = replace(template, ".xml" => "_$(category).xml")
         fname = replace(fname, " " => "_")
-        xdoc = save_to_moodle_category(quiz, category, penalty)
+        xdoc = save_to_moodle_category(quiz, category, penalty_options=penalty_options,
+                                       penalty_boolean=penalty_boolean)
         save_file(xdoc, fname)
     end
 end
