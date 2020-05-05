@@ -123,7 +123,8 @@ Create the header of a question for Moodle
 create_header_question_moodle(xroot, tag, type)
 """
 
-function create_header_question_moodle(xroot, question::AbstractString, type::QuestionType, shuffle::Bool, i)
+function create_header_question_moodle(xroot, question::AbstractString, type::QuestionType, shuffle::Bool, i,
+                                       penalty=0)
     xquestion = new_child(xroot, "question")
 
     if (type == unique)
@@ -132,6 +133,12 @@ function create_header_question_moodle(xroot, question::AbstractString, type::Qu
         set_attribute(xquestion, "type", "truefalse")
     else
         throw("Error, type '$type' is unknown")
+    end
+
+    if penalty == 0
+        penalty_str = "0"
+    else
+        penalty_str = String(-penalty)
     end
 
     name = new_child(new_child(xquestion, "name"), "text")
@@ -146,11 +153,11 @@ function create_header_question_moodle(xroot, question::AbstractString, type::Qu
     new_child(generalfeedback, "text")
     # parameters
     if type == unique
-        params = OrderedDict("generalfeedback" => "1", "penalty" => "", "hidden" => "0", "penalty"=>"0",
+        params = OrderedDict("generalfeedback" => "1", "penalty" => "", "hidden" => "0", "penalty"=>penalty_str,
                          "single" => "true", "shuffleanswers" => shuffle ? "true" : "false",
                                     "answernumbering" => "abc")
     else
-        params = OrderedDict("generalfeedback" => "1", "penalty" => "", "hidden" => "0", "penalty"=>"0")
+        params = OrderedDict("generalfeedback" => "1", "penalty" => "", "hidden" => "0", "penalty"=>penalty_str)
     end
 
     for (key, value) in params
@@ -201,7 +208,7 @@ Save the quiz into a group of categories.
 
     save_to_moodle(quiz::Quiz, category::AbstractString)
 """
-function save_to_moodle_category(quiz::Quiz, category::AbstractString)
+function save_to_moodle_category(quiz::Quiz, category::AbstractString, penalty=0)
     xdoc = XMLDocument()
     # Create test
     xroot = create_root(xdoc, "quiz")
@@ -221,7 +228,8 @@ function save_to_moodle_category(quiz::Quiz, category::AbstractString)
             continue
         end
 
-        xquestion = create_header_question_moodle(xroot, question.question, unique, question.shuffle, i)
+        xquestion = create_header_question_moodle(xroot, question.question, unique, question.shuffle, i,
+                                                  penalty)
         node = new_child(xquestion, "shownumcorrect")
 
         # Show the answers
@@ -229,13 +237,13 @@ function save_to_moodle_category(quiz::Quiz, category::AbstractString)
             add_answer_moodle(xquestion, option, right = (posi == question.right))
         end
     end
-    # Put all the questions
+    # Put all the true/false questions
     for (i, question) in enumerate(quiz.booleans)
         if question.tag != category
             continue
         end
 
-        xquestion = create_header_question_moodle(xroot, question.question, boolean, true, i)
+        xquestion = create_header_question_moodle(xroot, question.question, boolean, true, i, penalty)
 
         # Show the answers
         add_answer_moodle(xquestion, "true", format="moodle_auto_format", right=(question.right==true))
@@ -245,11 +253,11 @@ function save_to_moodle_category(quiz::Quiz, category::AbstractString)
     return xdoc
 end
 
-function save_to_moodle(quiz::Quiz, template::AbstractString)
+function save_to_moodle(quiz::Quiz, template::AbstractString, penalty=0)
     for category in quiz.categories
         fname = replace(template, ".xml" => "_$(category).xml")
         fname = replace(fname, " " => "_")
-        xdoc = save_to_moodle_category(quiz, category)
+        xdoc = save_to_moodle_category(quiz, category, penalty)
         save_file(xdoc, fname)
     end
 end
@@ -260,9 +268,9 @@ Save the questions in a file as a XML Moodle Question
     txt_to_moodle(fname::AbstractString, template::AbstractString)
 
 """
-function txt_to_moodle(fname::AbstractString, template::AbstractString)
+function txt_to_moodle(fname::AbstractString, template::AbstractString, penalty=0)
     quiz = txt_to_quiz(fname)
-    save_to_moodle(quiz, template)
+    save_to_moodle(quiz, template, penalty)
     return nothing
 end
 
