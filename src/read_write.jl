@@ -356,100 +356,71 @@ function read_txt(io::IO)::Quiz
             continue
         end
 
-        mcat = match(r"^\*\s*(.*)$", line)
+        if !is_category(line) && isempty(categories)
+            push!(categories, category)
+        end
 
-        if !isnothing(mcat)
+        if is_category(line)
             oldcategory = category
-            category = mcat.captures[1]
+            category = get_category_name(line)
             push!(categories, category)
 
             if !isempty(question)
-                if (right == -1)
-                    throw("Error: neither option of question '$question' is right")
-                end
-                push!(questions, QuestionUnique(tag=oldcategory,
-                                                question=question, options=options, right=right,
-                                                shuffle=shuffle))
+                save_question!(questions, oldcategory, question, options, trues, shuffle)
+                options = String[]
+                trues = Int32[]
                 shuffle = true
+                question = ""
             end
-        elseif endswith(line, r"[+-]")
-            question = strip(line[1:end-1])
-            right = (line[end] == '+')
-            push!(booleanQuestions, QuestionTrueFalse(tag=category,
-                                                      question=question,
-                                                      right=right))
-            question = ""
-        elseif !startswith(line, r"[+-]")
+        elseif is_question_truefalse(line)
 
             if !isempty(options)
-                if (right == -1)
-                    throw("Error: neither option of question '$line' is right")
-                end
-                push!(questions, QuestionUnique(tag=category,
-                                                question=question, options=options, right=right,
-                                                shuffle=shuffle))
-                shuffle = true
+                save_question!(questions, category, question, options, trues, shuffle)
                 options = String[]
-                right = -1
+                trues = Int32[]
+                shuffle = true
+                question = ""
+            end
 
-                # True/False Question
-                if endswith(line, r"[+-]")
-                    question = strip(line[1:end-1])
-                    right = (line[end] == '+')
-                    push!(booleanQuestions, QuestionTrueFalse(tag=category,
-                                                              question=question,
-                                                              right=right))
-                    question = ""
-                else
-                    question = line
-                end
-            elseif endswith(line, r"[+-]")
-                question = strip(line[1:end-1])
-                right = (line[end] == '+')
-                push!(booleanQuestions, QuestionTrueFalse(tag=category,
-                                                          question=question,
-                                                          right=right))
-            elseif !isempty(question)
+            push!(booleanQuestions, QuestionTrueFalse(tag=category,
+                                                      question=get_truefalse_question(line),
+                                                      right=is_question_true(line)))
+            question = ""
+        elseif is_option(line)
+            # Check error
+            if isempty(question)
+                error("Option '$(line) without question")
+            end
+            option, is_true = get_option(line)
+            push!(options, option)
+
+            if (is_true)
+                push!(trues, length(options))
+            end
+
+            if occursin(r"\b[ABCDEF]\b", line)
+                shuffle = false
+            end
+        elseif is_question_options(line)
+            if !isempty(options)
+                save_question(category, question, options, trues, shuffle)
+                options = String[]
+                trues = Int32[]
+                shuffle = true
+                question = ""
+            end
+
+            if !isempty(question)
                 question *= "\n$line"
             else
-                question = line;
-            end
-        else
-            moption = match(r"([+-])\s*(.*)$", line)
-
-            if !isempty(line) !isnothing(moption)
-                @assert !isempty(category)
-                @assert !isempty(question)
-                push!(options, moption.captures[2])
-
-                if (moption.captures[1] == "+")
-                    if (right != -1)
-                        throw("Not more than one option is acceptable")
-                    end
-                    right = length(options)
-                end
-
-                if occursin(r"\b[ABCDEF]\b", line)
-                    shuffle = false
-                end
+                question = line
             end
         end
-    end
+   end
 
     if (question != "")
-        if endswith(question, r"[+-]")
-            right = (question[end] == '+')
-            question = strip(question[1:end-1])
-            push!(booleanQuestions, QuestionTrueFalse(tag=category,
-                                                      question=question,
-                                                      right=right))
-        else
-            push!(questions, QuestionUnique(tag=category,
-                                            question=question, options=options, right=right,
-                                            shuffle=shuffle))
-        end
+        save_question!(questions, category, question, options, trues, shuffle)
     end
 
-
-    return  Quiz(categories=categories, uniques=questions, booleans=booleanQuestions)
+    return Quiz(categories=categories, uniques=questions, booleans=booleanQuestions)
 end
