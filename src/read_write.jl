@@ -132,7 +132,7 @@ function create_header_question_moodle(xroot, question::AbstractString, type::Qu
     elseif (type == boolean)
         set_attribute(xquestion, "type", "truefalse")
     else
-        throw("Error, type '$type' is unknown")
+        error("Error, type '$(type)' is unknown")
     end
 
     if penalty == 0
@@ -281,18 +281,70 @@ Read the text file to create the Quiz
     read_txt(fname)
 """
 function read_txt(fname::AbstractString)::Quiz
-    isfile(fname) || throw("Error reading file '$fname'")
+    isfile(fname) || error("Error reading file '$fname'")
     open(fname) do file
         return read_txt(file)
     end
 end
 
+function is_category(line)
+    return startswith(line, r"\*\s*")
+end
+
+function get_category_name(line)
+    mcat = match(r"^\*\s*(.*)$", line)
+    @assert !isnothing(mcat)
+    return mcat.captures[1]
+end
+
+function is_question_truefalse(line)
+    return endswith(line, r"[+-]")
+end
+
+function get_truefalse_question(line)
+    return line[1:end-1]
+end
+
+function is_question_true(line)
+    return line[end] == '+'
+end
+
+function is_question_options(line)
+    return !endswith(line, r"[+-]") && !startswith(line, r"[+-]")
+end
+
+function is_option(line)
+    return startswith(line, r"[+-]")
+end
+
+function get_option(line)
+    is_true = (line[1] == '+')
+    option = strip(line[2:end])
+    return option, is_true
+end
+
+function save_question!(questions, category, question, options::AbstractArray{String,1},
+                       trues::AbstractArray{Int32,1}, shuffle::Bool)
+    if isempty(trues)
+        error("Error, question '$(question)' has not right option")
+    end
+
+    if length(trues)==1
+        push!(questions, QuestionUnique(tag=category,
+                                    question=question, options=options, right=trues[1],
+                                        shuffle=shuffle))
+    else
+        error("Error, question 'question' has several right options, not yet implemented")
+    end
+end
+
 function read_txt(io::IO)::Quiz
-    categories = []
-    category = ""
+    categories = String[]
+    response_error = nothing
+    category = "Default"
     question = ""
     shuffle = true
-    right = -1
+    trues = Int32[]
     options = String[]
     booleanQuestions = QuestionTrueFalse[]
     questions = QuestionUnique[]
