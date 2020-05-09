@@ -1,9 +1,18 @@
 using MoodleQuestions
 
 function main(ARGS)
-    if length(ARGS)!=2
+    @show ARGS
+    @show length(ARGS)
+
+    if length(ARGS)<2
         println(stderr, "usage: textfile outputfile")
         return
+    end
+
+    if length(ARGS)==3
+        penalty = parse(Float32, ARGS[3])
+    else
+        penalty = 0.0
     end
 
     fname = ARGS[1]
@@ -15,7 +24,7 @@ function main(ARGS)
     end
 
     quiz = read_txt(fname)
-    save_to_moodle(quiz, foutput)
+    save_to_moodle(quiz, foutput, penalty_options=penalty, penalty_boolean=penalty)
 end
 
 isinteractive() || main(ARGS)
