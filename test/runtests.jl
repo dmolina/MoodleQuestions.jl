@@ -40,3 +40,16 @@ end
     @test quiz.uniques[2].right == 1
 end
 
+
+@testset "ReadWithout category" begin
+    content = """
+    Question 1.
+    - Option 1.
+    + Option 2.
+"""
+    quiz = read_txt(IOBuffer(content))
+    @show quiz
+    @test length(quiz.categories) == 1
+    @test quiz.categories[1] == "Default"
+end
+
