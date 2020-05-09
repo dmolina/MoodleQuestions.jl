@@ -9,4 +9,8 @@ export read_txt
 # Save to Moodle
 export save_to_moodle
 
+# Export serve version
+include("serve.jl")
+export serve_quiz
+
 end # module
