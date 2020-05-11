@@ -78,6 +78,8 @@ that the sentence is the right answer.
 The answers in the question are shuffle, except when one of the word of *A*,
 *B*, ... is used. 
 
+In [`Instructions`](@ref format) you can see more details.
+
 ## Export functionality
 
 It is able to export to the MoodleXML format. 
