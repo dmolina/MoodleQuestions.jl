@@ -45,10 +45,10 @@ function replace_html(text::AbstractString)
 end
 
 """
-Read a XML documentation from SWAD and return a Quiz answer
 
 read_swad(fname::AbstractString)::Quiz
 
+Read a XML documentation from SWAD and return a Quiz answer
 """
 function read_swad(fname::AbstractString)::Quiz
     xdoc = parse_file(fname)
@@ -338,6 +338,11 @@ function save_question!(questions, category, question, options::AbstractArray{St
     end
 end
 
+"""
+Read the text file to create the Quiz
+
+    read_txt(io::IO)
+"""
 function read_txt(io::IO)::Quiz
     categories = String[]
     response_error = nothing

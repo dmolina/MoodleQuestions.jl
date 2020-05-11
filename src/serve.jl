@@ -9,6 +9,11 @@ using Sockets
 
 using MoodleQuestions
 
+"""
+get_params(req::HTTP.Request)
+
+Returns the POST parameters in a Dictionary.
+"""
 function get_params(req::HTTP.Request)
     data = String(req.body)
     params = Dict{String,String}()
@@ -60,6 +65,11 @@ function get_params(req::HTTP.Request)
     return params
 end
 
+"""
+replace_accent(string)
+
+Return the string without accents (for XML filename saving).
+"""
 function replace_accent(string)
     string = replace(string, "á" => "a")
     string = replace(string, "é" => "e")
@@ -131,7 +141,15 @@ function handle(req::HTTP.Request)
     end
 end
 
-function serve_quiz(port = 8080)
+"""
+serve_quiz(port)
+
+Run the text file in the txt format, and return the XML file.
+If there is only one category only one parameter is defined.
+
+serve_quiz(port)
+"""
+function serve_quiz(port = 8100)
     router = HTTP.Router()
     HTTP.@register(router, "POST", "/*", handle)
     HTTP.serve(router, Sockets.localhost, port)
