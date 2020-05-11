@@ -1,7 +1,7 @@
 name = "MoodleQuestions"
 uuid = "e6233ccc-e36c-49e3-ac71-1ad7b6c78055"
 authors = ["Daniel Molina"]
-version = "0.1.0"
+version = "0.2.0"
 
 [deps]
 HTTP = "cd3eb016-35fb-5094-929b-558a96fad6f3"
