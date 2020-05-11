@@ -13,7 +13,8 @@ makedocs(;
     ),
     pages=[
         "Home" => "index.md",
-        "Instructions" => "formato.md"
+        "Instructions" => "formato.md", 
+        "Server Mode" => "server.md"
     ],
 )
 
