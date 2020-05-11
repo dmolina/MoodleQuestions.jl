@@ -152,7 +152,7 @@ serve_quiz(port)
 function serve_quiz(port = 8100)
     router = HTTP.Router()
     HTTP.@register(router, "POST", "/*", handle)
-    HTTP.serve(router, Sockets.localhost, port)
+    HTTP.serve(router, Sockets.getipaddr(), port)
 end
 
 function test_serve(port = 8080)
