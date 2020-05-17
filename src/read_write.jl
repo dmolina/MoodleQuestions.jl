@@ -1,6 +1,8 @@
 using Parameters
 using LightXML
 using OrderedCollections
+using SimpleTranslations
+using Formatting
 
 @enum QuestionType unique=1 boolean=2
 
@@ -281,7 +283,10 @@ Read the text file to create the Quiz
     read_txt(fname)
 """
 function read_txt(fname::AbstractString)::Quiz
-    isfile(fname) || error("Error reading file '$fname'")
+    fmessages = joinpath(dirname(pathof(MoodleQuestions)), "messages.ini")
+    loadmsgs!(fmessages, strict_mode=true)
+
+    isfile(fname) || error(format(get_msg("reading_file"), fname))
     open(fname) do file
         return read_txt(file)
     end
@@ -326,7 +331,7 @@ end
 function save_question!(questions, category, question, options::AbstractArray{String,1},
                        trues::AbstractArray{Int32,1}, shuffle::Bool)
     if isempty(trues)
-        error("Error, question '$(question)' has not right option")
+        error(format(get_msg("noright_question"), question))
     end
 
     if length(trues)==1
@@ -334,7 +339,7 @@ function save_question!(questions, category, question, options::AbstractArray{St
                                     question=question, options=options, right=trues[1],
                                         shuffle=shuffle))
     else
-        error("Error, question 'question' has several right options, not yet implemented")
+        error(format(get_msg("manyrights_question"), question))
     end
 end
 
@@ -394,7 +399,7 @@ function read_txt(io::IO)::Quiz
         elseif is_option(line)
             # Check error
             if isempty(question)
-                error("Option '$(line) without question")
+                error(format(get_msg("noquestion_line"), line))
             end
             option, is_true = get_option(line)
             push!(options, option)
