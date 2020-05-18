@@ -154,6 +154,8 @@ serve_quiz(port)
 """
 function serve_quiz(port = 8100)
     router = HTTP.Router()
+    fmessages = joinpath(dirname(pathof(MoodleQuestions)), "messages.ini")
+    loadmsgs!(fmessages, strict_mode=true)
     HTTP.@register(router, "POST", "/*", handle)
     HTTP.serve(router, Sockets.getipaddr(), port)
 end
