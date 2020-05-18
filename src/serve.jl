@@ -88,7 +88,10 @@ function handle(req::HTTP.Request)
     params = get_params(req)
     penalty_boolean = tryparse(Float32, get(params, "penalty_boolean", "0"))
     penalty_options = tryparse(Float32, get(params, "penalty_options", "0"))
-    
+
+    language = get(params, "language", "es")
+    set_language!(language)
+
     if (isnothing(penalty_boolean) || isnothing(penalty_options))
         return response_error
     end
