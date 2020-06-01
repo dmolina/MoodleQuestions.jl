@@ -4,9 +4,9 @@ using Test
 @testset "ReadFromSWAD" begin
     quiz = read_swad("../input_data/test_swad.xml")
     @test quiz != nothing
-    @test length(quiz.uniques)==419
-    @test quiz.uniques[1].shuffle == false
-    @test quiz.uniques[3].shuffle == true
+    @test length(quiz.multiples)==419
+    @test quiz.multiples[1].shuffle == false
+    @test quiz.multiples[3].shuffle == true
     @test length(quiz.categories) > 0
 end
 
@@ -32,12 +32,12 @@ end
     @test length(quiz.categories)==2
     @test quiz.categories[1]=="Category 1"
     @test quiz.categories[2]=="Category 2"
-    @test !isempty(quiz.uniques)
-    @test length(quiz.uniques)==2
-    @test quiz.uniques[1].question == "Question 1"
-    @test quiz.uniques[2].question == "Question 2"
-    @test quiz.uniques[1].right == 3
-    @test quiz.uniques[2].right == 1
+    @test !isempty(quiz.multiples)
+    @test length(quiz.multiples)==2
+    @test quiz.multiples[1].question == "Question 1"
+    @test quiz.multiples[2].question == "Question 2"
+    @test quiz.multiples[1].rights == [3]
+    @test quiz.multiples[2].rights == [1]
 end
 
 
@@ -48,8 +48,41 @@ end
     + Option 2.
 """
     quiz = read_txt(IOBuffer(content))
-    @show quiz
     @test length(quiz.categories) == 1
     @test quiz.categories[1] == "Default"
 end
 
+
+@testset "Reading multiple" begin
+    content = """
+    Question 1.
+    - Option 1.
+    + Option 2.
+    - Option 3.
+    + Option 4.
+"""
+    quiz = read_txt(IOBuffer(content))
+    question = only(quiz.multiples)
+    @test length(question.options)==4
+    @test question.rights == [2,4]
+end
+
+@testset "Reading multiple" begin
+    content = """
+Pregunta Buena.
+- Opción 1.
++ Opción 2.
+
+Pregunta 2
++ Opción 2.1.
+- Opción 2.2.
++ Opción 2.3.
+"""
+    quiz = read_txt(IOBuffer(content))
+    question = quiz.multiples[1]
+    @test length(question.options)==2
+    @test question.rights == [2]
+    question = quiz.multiples[2]
+    @test length(question.options)==3
+    @test question.rights == [1,3]
+end

@@ -4,13 +4,13 @@ using OrderedCollections
 using SimpleTranslations
 using Formatting
 
-@enum QuestionType unique=1 boolean=2
+@enum QuestionType multiple=1 boolean=2
 
-@with_kw struct QuestionUnique
+@with_kw struct QuestionMultiple
     tag::String
     question::String
     options::Vector{String}
-    right::Number
+    rights::Vector{UInt8}
     shuffle::Bool
 end
 
@@ -21,7 +21,7 @@ end
 end
 
 @with_kw struct Quiz
-    uniques::Vector{QuestionUnique}=QuestionUnique[]
+    multiples::Vector{QuestionMultiple}=QuestionMultiple[]
     booleans::Vector{QuestionTrueFalse}=QuestionTrueFalse[]
     categories::Vector{String}=String[]
 end
@@ -61,7 +61,7 @@ function read_swad(fname::AbstractString)::Quiz
 
     for xquestion in questions
         typestr = attribute(xquestion, "type")
-        type::QuestionType = unique
+        type::QuestionType = multiple
 
         if !(typestr in ["uniqueChoice", "TF"])
             continue
@@ -92,7 +92,7 @@ function read_swad(fname::AbstractString)::Quiz
             answer = parse(Bool, content(find_element(xquestion, "answer")))
             shuffle = true
             push!(quiz.booleans, QuestionTrueFalse(tag=tag, question=question, right=answer))
-        elseif type == unique
+        elseif type == multiple
             answer = find_element(xquestion, "answer")
             shuffle = attribute(answer, "shuffle")=="yes"
 
@@ -109,9 +109,9 @@ function read_swad(fname::AbstractString)::Quiz
             end
 
             options = replace_utf8.(options)
-            push!(quiz.uniques, QuestionUnique(tag=tag, question=question,
+            push!(quiz.multiples, QuestionMultiple(tag=tag, question=question,
                                            options=options,
-                                           right=right,
+                                           rights=[right],
                                                shuffle=shuffle))
         end
     end
@@ -119,56 +119,37 @@ function read_swad(fname::AbstractString)::Quiz
     return quiz
 end
 
-"""
-Create the header of a question for Moodle
+function get_moodle_type(question::QuestionMultiple)
+    return "multichoice"
+end
 
-create_header_question_moodle(xroot, tag, type)
-"""
+function get_moodle_type(question::QuestionTrueFalse)
+    return "truefalse"
+end
 
-function create_header_question_moodle(xroot, question::AbstractString, type::QuestionType, shuffle::Bool, i,
-                                       penalty=0)
-    xquestion = new_child(xroot, "question")
+function get_moodle_type(question)
+    error("Error, type of question '$(type)' is unknown")
+end
 
-    if (type == unique)
-        set_attribute(xquestion, "type", "multichoice")
-    elseif (type == boolean)
-        set_attribute(xquestion, "type", "truefalse")
-    else
-        error("Error, type '$(type)' is unknown")
-    end
-
-    if penalty == 0
-        penalty_str = "0"
-    else
-        penalty_str = "-$(penalty)"
-    end
-
-    name = new_child(new_child(xquestion, "name"), "text")
-    add_text(name, "Question_$(i)")
-    questiontext = new_child(xquestion, "questiontext")
-    set_attribute(questiontext, "format", "html")
-    text = new_child(questiontext, "text")
-    add_text(text, "$(question)")
+function save_question_moodle!(xquestion, question::QuestionMultiple, penalty)
     generalfeedback = new_child(xquestion, "generalfeedback")
     # generalfeedback empty
     set_attribute(generalfeedback, "format", "html")
     new_child(generalfeedback, "text")
     # parameters
-    if type == unique
-        params = OrderedDict("generalfeedback" => "1", "penalty" => "", "hidden" => "0", "penalty"=>penalty_str,
-                         "single" => "true", "shuffleanswers" => shuffle ? "true" : "false",
-                                    "answernumbering" => "abc")
+    if length(question.rights)==1
+        single = "true"
     else
-        params = OrderedDict("generalfeedback" => "1", "penalty" => "", "hidden" => "0", "penalty"=>penalty_str)
+        single = "false"
     end
+
+    params = OrderedDict("generalfeedback" => "1", "hidden" => "0", "penalty"=>penalty,
+                         "single" => single, "shuffleanswers" => (question.shuffle ? "true" : "false"),
+                          "answernumbering" => "abc")
 
     for (key, value) in params
         node = new_child(xquestion, key)
         add_text(node, value)
-    end
-
-    if (type == unique)
-
     end
 
     feedbacks = OrderedDict("correctfeedback" => "Respuesta correcta",
@@ -181,6 +162,39 @@ function create_header_question_moodle(xroot, question::AbstractString, type::Qu
         text = new_child(node, "text")
         add_text(text, message)
     end
+end
+
+function save_question_moodle!(xquestion, question::QuestionTrueFalse, penalty)
+end
+
+"""
+Create the header of a question for Moodle
+
+create_header_question_moodle(xroot, tag, type)
+"""
+function create_header_question_moodle(xroot, question, i, penalty)
+    xquestion = new_child(xroot, "question")
+    # Set the type
+    set_attribute(xquestion, "type", get_moodle_type(question))
+
+    # Get penalty
+    if penalty == 0
+        penalty_str = "0"
+    else
+        penalty_str = "-$(penalty)"
+    end
+
+    # Put the id of the question
+    name = new_child(new_child(xquestion, "name"), "text")
+    add_text(name, "Question_$(i)")
+
+    # Put the question text
+    questiontext = new_child(xquestion, "questiontext")
+    set_attribute(questiontext, "format", "html")
+    text = new_child(questiontext, "text")
+    add_text(text, "$(question.question)")
+
+    save_question_moodle!(xquestion, question, penalty_str)
 
     return xquestion
 end
@@ -225,18 +239,16 @@ function save_to_moodle_category(quiz::Quiz, category::AbstractString; penalty_o
     add_text(text, "\$course\$/top/$(category)")
 
     # Put all the questions
-    for (i, question) in enumerate(quiz.uniques)
+    for (i, question) in enumerate(quiz.multiples)
         if question.tag != category
             continue
         end
 
-        xquestion = create_header_question_moodle(xroot, question.question, unique, question.shuffle, i,
+        xquestion = create_header_question_moodle(xroot, question, i,
                                                   penalty_options)
-        node = new_child(xquestion, "shownumcorrect")
-
         # Show the answers
         for (posi,option) in enumerate(question.options)
-            add_answer_moodle(xquestion, option, right = (posi == question.right))
+            add_answer_moodle(xquestion, option, right = (posi in question.rights))
         end
     end
     # Put all the true/false questions
@@ -334,13 +346,9 @@ function save_question!(questions, category, question, options::AbstractArray{St
         error(format(get_msg("noright_question"), question))
     end
 
-    if length(trues)==1
-        push!(questions, QuestionUnique(tag=category,
-                                    question=question, options=options, right=trues[1],
-                                        shuffle=shuffle))
-    else
-        error(format(get_msg("manyrights_question"), question))
-    end
+    push!(questions, QuestionMultiple(tag=category,
+                                      question=question, options=options, rights=trues,
+                                      shuffle=shuffle))
 end
 
 """
@@ -357,7 +365,7 @@ function read_txt(io::IO)::Quiz
     trues = Int32[]
     options = String[]
     booleanQuestions = QuestionTrueFalse[]
-    questions = QuestionUnique[]
+    questions = QuestionMultiple[]
 
     for line in readlines(io)
         line = strip(line)
@@ -413,11 +421,13 @@ function read_txt(io::IO)::Quiz
             end
         elseif is_question_options(line)
             if !isempty(options)
-                save_question(category, question, options, trues, shuffle)
+                save_question!(questions, category, question, options, trues, shuffle)
                 options = String[]
                 trues = Int32[]
                 shuffle = true
                 question = ""
+            elseif !isempty(question)
+                error(format(get_msg("nooption"), question))
             end
 
             if !isempty(question)
@@ -432,5 +442,5 @@ function read_txt(io::IO)::Quiz
         save_question!(questions, category, question, options, trues, shuffle)
     end
 
-    return Quiz(categories=categories, uniques=questions, booleans=booleanQuestions)
+    return Quiz(categories=categories, multiples=questions, booleans=booleanQuestions)
 end

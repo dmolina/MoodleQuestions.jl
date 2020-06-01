@@ -4,17 +4,25 @@ All notable changes to this project will be documented in this file.
 This project adheres to [Semantic Versioning](http://semver.org/) and [Keep a Changelog](http://keepachangelog.com/).
 
 
+
 ## Unreleased
 ---
 
 ### New
-* Using SimpleTranslations to translate errors.
 
 ### Changes
 
 ### Fixes
 
 ### Breaks
+
+
+## 0.2.1 - (2020-06-02)
+---
+
+### New
+* Supported questions with multiple options.
+* Using SimpleTranslations to translate errors.
 
 
 ## 0.2.0 - (2020-05-11)
