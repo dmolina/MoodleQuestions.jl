@@ -86,3 +86,23 @@ Pregunta 2
     @test length(question.options)==3
     @test question.rights == [1,3]
 end
+
+@testset "Reading essays" begin
+    content = """
+Pregunta Buena.
+- Opción 1.
++ Opción 2.
+
+[Pregunta 2]
+
+Pregunta Buena.
++ Opción 1.
+"""
+    quiz = read_txt(IOBuffer(content))
+    @test length(quiz.multiples) == 2
+    question = quiz.multiples[1]
+    @test length(question.options)==2
+    @test question.rights == [2]
+    question = only(quiz.essays)
+    @test question.question =="Pregunta 2"
+end

@@ -20,9 +20,15 @@ end
     right::Bool
 end
 
+@with_kw struct QuestionEssay
+    tag::String
+    question::String
+end
+
 @with_kw struct Quiz
     multiples::Vector{QuestionMultiple}=QuestionMultiple[]
     booleans::Vector{QuestionTrueFalse}=QuestionTrueFalse[]
+    essays::Vector{QuestionEssay}=QuestionEssay[]
     categories::Vector{String}=String[]
 end
 
@@ -127,6 +133,10 @@ function get_moodle_type(question::QuestionTrueFalse)
     return "truefalse"
 end
 
+function get_moodle_type(question::QuestionEssay)
+    return "essay"
+end
+
 function get_moodle_type(question)
     error("Error, type of question '$(type)' is unknown")
 end
@@ -165,6 +175,13 @@ function save_question_moodle!(xquestion, question::QuestionMultiple, penalty)
 end
 
 function save_question_moodle!(xquestion, question::QuestionTrueFalse, penalty)
+end
+
+function save_question_moodle!(xquestion, question::QuestionEssay, penalty)
+    answer = new_child(xquestion, "answer")
+    set_attribute(answer, "fraction", "0")
+    text = new_child(answer, "text")
+    return
 end
 
 """
@@ -264,6 +281,14 @@ function save_to_moodle_category(quiz::Quiz, category::AbstractString; penalty_o
         add_answer_moodle(xquestion, "false", format="moodle_auto_format", right=(question.right==false))
     end
 
+    for (i, question) in enumerate(quiz.essays)
+        if question.tag != category
+            continue
+        end
+
+        xquestion = create_header_question_moodle(xroot, question, i, penalty_boolean)
+    end
+
     return xdoc
 end
 
@@ -322,6 +347,14 @@ function get_truefalse_question(line)
     return line[1:end-1]
 end
 
+function get_essay_question(line)
+    return line[2:end-1]
+end
+
+function is_question_essay(line)
+    return startswith(line, "[") && endswith(line, "]")
+end
+
 function is_question_true(line)
     return line[end] == '+'
 end
@@ -366,6 +399,7 @@ function read_txt(io::IO)::Quiz
     options = String[]
     booleanQuestions = QuestionTrueFalse[]
     questions = QuestionMultiple[]
+    essays = QuestionEssay[]
 
     for line in readlines(io)
         line = strip(line)
@@ -390,7 +424,7 @@ function read_txt(io::IO)::Quiz
                 shuffle = true
                 question = ""
             end
-        elseif is_question_truefalse(line)
+        elseif is_question_truefalse(line) || is_question_essay(line)
 
             if !isempty(options)
                 save_question!(questions, category, question, options, trues, shuffle)
@@ -400,9 +434,13 @@ function read_txt(io::IO)::Quiz
                 question = ""
             end
 
-            push!(booleanQuestions, QuestionTrueFalse(tag=category,
+            if (is_question_truefalse(line))
+                push!(booleanQuestions, QuestionTrueFalse(tag=category,
                                                       question=get_truefalse_question(line),
-                                                      right=is_question_true(line)))
+                                                          right=is_question_true(line)))
+            else
+                push!(essays, QuestionEssay(tag=category, question=get_essay_question(line)))
+            end
             question = ""
         elseif is_option(line)
             # Check error
@@ -442,5 +480,5 @@ function read_txt(io::IO)::Quiz
         save_question!(questions, category, question, options, trues, shuffle)
     end
 
-    return Quiz(categories=categories, multiples=questions, booleans=booleanQuestions)
+    return Quiz(categories=categories, multiples=questions, essays=essays, booleans=booleanQuestions)
 end
