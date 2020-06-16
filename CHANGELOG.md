@@ -5,14 +5,16 @@ This project adheres to [Semantic Versioning](http://semver.org/) and [Keep a Ch
 
 
 
-## Unreleased
+## 0.2.2 - (2020-06-16)
 ---
 
 ### New
+* Add Question type Essay, surround the question with '[' and ']'.
 
 ### Changes
 
 ### Fixes
+* Error with boolean questions.
 
 ### Breaks
 
