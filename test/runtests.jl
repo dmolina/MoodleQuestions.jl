@@ -106,3 +106,9 @@ Pregunta Buena.
     question = only(quiz.essays)
     @test question.question =="Pregunta 2"
 end
+
+@testset "Error in server" begin
+    content = """hola. +"""
+    quiz = read_txt(IOBuffer(content))
+    @test length(quiz.multiples) == 1
+end
