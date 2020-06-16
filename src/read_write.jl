@@ -274,7 +274,7 @@ function save_to_moodle_category(quiz::Quiz, category::AbstractString; penalty_o
             continue
         end
 
-        xquestion = create_header_question_moodle(xroot, question.question, boolean, true, i, penalty_boolean)
+        xquestion = create_header_question_moodle(xroot, question, i, penalty_boolean)
 
         # Show the answers
         add_answer_moodle(xquestion, "true", format="moodle_auto_format", right=(question.right==true))

@@ -140,7 +140,6 @@ function handle(req::HTTP.Request)
         return HTTP.Response(200, headers, body=content)
 
     catch e
-        @show e
         return response_error(e.msg)
     end
 end
