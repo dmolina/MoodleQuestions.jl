@@ -140,7 +140,12 @@ function handle(req::HTTP.Request)
         return HTTP.Response(200, headers, body=content)
 
     catch e
-        return response_error(e.msg)
+        if (:msg in propertynames(e))
+            return response_error(e.msg)
+        else
+            @show e
+            return response_error("Unknown error")
+        end
     end
 end
 
