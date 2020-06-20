@@ -189,7 +189,7 @@ Create the header of a question for Moodle
 
 create_header_question_moodle(xroot, tag, type)
 """
-function create_header_question_moodle(xroot, question, i, penalty)
+function create_header_question_moodle(xroot, question, i, penalty=0)
     xquestion = new_child(xroot, "question")
     # Set the type
     set_attribute(xquestion, "type", get_moodle_type(question))
@@ -216,13 +216,14 @@ function create_header_question_moodle(xroot, question, i, penalty)
     return xquestion
 end
 
-function add_answer_moodle(xquestion, description::AbstractString; format="html", right::Bool=true)
+function add_answer_moodle(xquestion, description::AbstractString; format="html", penalty=0, right::Bool=true)
     answer=new_child(xquestion, "answer")
+
 
     if right
         fraction = "100"
     else
-        fraction = "0"
+        fraction = "$penalty"
     end
 
     set_attribute(answer, "fraction", fraction)
@@ -255,38 +256,75 @@ function save_to_moodle_category(quiz::Quiz, category::AbstractString; penalty_o
     text = new_child(cat, "text")
     add_text(text, "\$course\$/top/$(category)")
 
+    if (penalty_options > 0)
+        penalty_options_answer = convert(Int, -100*penalty_options)
+    else
+        penalty_options_answer = 0
+    end
+
+    if (penalty_boolean > 0)
+        penalty_boolean_answer = convert(Int, -100*penalty_boolean)
+    else
+        penalty_boolean_answer = 0
+    end
+
+    multiples = quiz.multiples
+    essays = quiz.essays
+    booleans = quiz.booleans
+    first_boolean_convert = length(multiples)
+
+    if (penalty_boolean != 0)
+        options = [get_msg("true"), get_msg("false")]
+        first_boolean_convert = length(multiples)
+
+        for question in booleans
+            rights = [(question.right) ? 1 : 2]
+            push!(multiples, QuestionMultiple(question.tag, question.question, options,
+                           rights, true))
+        end
+        booleans = QuestionTrueFalse[]
+    end
+
     # Put all the questions
-    for (i, question) in enumerate(quiz.multiples)
+    for (i, question) in enumerate(multiples)
         if question.tag != category
             continue
         end
 
-        xquestion = create_header_question_moodle(xroot, question, i,
-                                                  penalty_options)
+        penalty = 0
+
+        if (i <= first_boolean_convert)
+            penalty = penalty_options_answer
+        else
+            penalty = penalty_boolean_answer
+        end
+
+        xquestion = create_header_question_moodle(xroot, question, i)
         # Show the answers
         for (posi,option) in enumerate(question.options)
-            add_answer_moodle(xquestion, option, right = (posi in question.rights))
+            add_answer_moodle(xquestion, option, right = (posi in question.rights), penalty=penalty)
         end
     end
-    # Put all the true/false questions
-    for (i, question) in enumerate(quiz.booleans)
+
+    for (i, question) in enumerate(essays)
         if question.tag != category
             continue
         end
 
-        xquestion = create_header_question_moodle(xroot, question, i, penalty_boolean)
+        xquestion = create_header_question_moodle(xroot, question, i)
+    end
+
+    # Put all the true/false questions
+    for (i, question) in enumerate(booleans)
+        if question.tag != category
+            continue
+        end
+
+        xquestion = create_header_question_moodle(xroot, question, i)
 
         # Show the answers
         add_answer_moodle(xquestion, "true", format="moodle_auto_format", right=(question.right==true))
         add_answer_moodle(xquestion, "false", format="moodle_auto_format", right=(question.right==false))
-    end
-
-    for (i, question) in enumerate(quiz.essays)
-        if question.tag != category
-            continue
-        end
-
-        xquestion = create_header_question_moodle(xroot, question, i, penalty_boolean)
     end
 
     return xdoc

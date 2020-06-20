@@ -102,7 +102,7 @@ function handle(req::HTTP.Request)
         quiz = read_txt(IOBuffer(content))
        dir = mktempdir()
     # Save quiz to temp dir
-    save_to_moodle(quiz, joinpath(dir, "quiz.xml"))
+    save_to_moodle(quiz, joinpath(dir, "quiz.xml"), penalty_options=penalty_options, penalty_boolean=penalty_boolean)
     # Get list
     files = readdir(dir, join=true)
 
