@@ -110,5 +110,5 @@ end
 @testset "Error in server" begin
     content = """hola. +"""
     quiz = read_txt(IOBuffer(content))
-    @test length(quiz.multiples) == 1
+    @test length(quiz.booleans) == 1
 end
