@@ -1,22 +1,39 @@
+
 # CHANGELOG
 
 All notable changes to this project will be documented in this file.
 This project adheres to [Semantic Versioning](http://semver.org/) and [Keep a Changelog](http://keepachangelog.com/).
 
+## 0.2.3 - (2020-06-20)
+---
+
+### New
+* Automatic convert boolean with penalty to multichoice.
+
+### Changes
+
+### Fixes
+* Management error with unexpected error.
+
+### Breaks
 
 
 ## 0.2.2 - (2020-06-16)
 ---
 
 ### New
+* Automatic convert boolean with penalty to multichoice.
 * Add Question type Essay, surround the question with '[' and ']'.
 
 ### Changes
 
 ### Fixes
+* Management error with unexpected error.
+* Penalty Functions in multioptions.
 * Error with boolean questions.
 
 ### Breaks
+
 
 
 ## 0.2.1 - (2020-06-02)
