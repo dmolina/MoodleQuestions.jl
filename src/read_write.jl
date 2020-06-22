@@ -247,6 +247,15 @@ function is_multiple_boolean(question::QuestionMultiple)
     end
 end
 
+function is_also(questions, question_str::AbstractString)
+    for question in questions
+        if (question.question == question_str)
+            return true
+        end
+    end
+    return false
+end
+
 """
 
 Save the quiz into a group of categories.
@@ -287,9 +296,11 @@ function save_to_moodle_category(quiz::Quiz, category::AbstractString; penalty_o
         options = [get_msg("true"), get_msg("false")]
 
         for question in booleans
-            rights = [(question.right) ? 1 : 2]
-            push!(multiples, QuestionMultiple(question.tag, question.question, options,
-                           rights, true))
+            if !is_also(multiples, question.question)
+                rights = [(question.right) ? 1 : 2]
+                push!(multiples, QuestionMultiple(question.tag, question.question, options,
+                                                  rights, true))
+            end
         end
         booleans = QuestionTrueFalse[]
     end
