@@ -114,9 +114,7 @@ function handle(req::HTTP.Request)
         zipfile = ZipFile.Writer(fname)
 
         for fname in files
-            @show fname
             nameinzip = replace_accent(basename(fname))
-            @show nameinzip
             fileinzip = ZipFile.addfile(zipfile, nameinzip)
             open(fname) do file
                 data = read(file, String)
