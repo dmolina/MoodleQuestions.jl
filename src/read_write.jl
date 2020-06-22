@@ -219,9 +219,10 @@ end
 function add_answer_moodle(xquestion, description::AbstractString; format="html", penalty=0, right::Bool=true)
     answer=new_child(xquestion, "answer")
 
-
     if right
         fraction = "100"
+    elseif penalty == -33
+        fraction = "-33,33333"
     else
         fraction = "$penalty"
     end
