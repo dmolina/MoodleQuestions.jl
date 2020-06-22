@@ -237,6 +237,16 @@ function add_answer_moodle(xquestion, description::AbstractString; format="html"
     add_text(text, "")
 end
 
+function is_multiple_boolean(question::QuestionMultiple)
+    if length(question.options) != 2
+        return false
+    else
+        option = question.options[1]
+
+        return option in [get_msg("true"), get_msg("false")];
+    end
+end
+
 """
 
 Save the quiz into a group of categories.
@@ -272,11 +282,9 @@ function save_to_moodle_category(quiz::Quiz, category::AbstractString; penalty_o
     multiples = quiz.multiples
     essays = quiz.essays
     booleans = quiz.booleans
-    first_boolean_convert = length(multiples)
 
     if (penalty_boolean != 0)
         options = [get_msg("true"), get_msg("false")]
-        first_boolean_convert = length(multiples)
 
         for question in booleans
             rights = [(question.right) ? 1 : 2]
@@ -293,11 +301,10 @@ function save_to_moodle_category(quiz::Quiz, category::AbstractString; penalty_o
         end
 
         penalty = 0
-
-        if (i <= first_boolean_convert)
-            penalty = penalty_options_answer
-        else
+        if is_multiple_boolean(question)
             penalty = penalty_boolean_answer
+        else
+            penalty = penalty_options_answer
         end
 
         xquestion = create_header_question_moodle(xroot, question, i)
