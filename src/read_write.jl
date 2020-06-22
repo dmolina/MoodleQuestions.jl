@@ -222,7 +222,7 @@ function add_answer_moodle(xquestion, description::AbstractString; format="html"
     if right
         fraction = "100"
     elseif penalty == -33
-        fraction = "-33,33333"
+        fraction = "-33.33333"
     else
         fraction = "$penalty"
     end
