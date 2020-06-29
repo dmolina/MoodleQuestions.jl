@@ -397,7 +397,7 @@ function get_category_name(line)
 end
 
 function is_question_truefalse(line)
-    return endswith(line, r"[+-]")
+    return endswith(line, r"[+-–]")
 end
 
 function get_truefalse_question(line)
