@@ -417,11 +417,11 @@ function is_question_true(line)
 end
 
 function is_question_options(line)
-    return !endswith(line, r"[+-]") && !startswith(line, r"[+-]")
+    return !endswith(line, r"[+-–]") && !startswith(line, r"[+-–]")
 end
 
 function is_option(line)
-    return startswith(line, r"[+-]")
+    return startswith(line, r"[+-–]")
 end
 
 function get_option(line)
