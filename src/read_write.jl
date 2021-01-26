@@ -4,7 +4,7 @@ using OrderedCollections
 using SimpleTranslations
 using Formatting
 
-@enum QuestionType multiple=1 boolean=2 text=3
+@enum QuestionType multiple=1 boolean=2 shorttext=3
 
 @with_kw struct QuestionMultiple
     tag::String
@@ -28,7 +28,7 @@ end
 @with_kw struct QuestionText
     tag::String
     question::String
-    solution::String
+    answer::String
 end
 
 @with_kw struct Quiz
@@ -81,7 +81,7 @@ function read_swad(fname::AbstractString)::Quiz
         elseif typestr == "uniqueChoice"
             type = multiple
         elseif typestr == "text"
-            type = text
+            type = shorttext
         else
             continue
         end
@@ -109,8 +109,10 @@ function read_swad(fname::AbstractString)::Quiz
             answer = parse(Bool, content(find_element(xquestion, "answer")))
             shuffle = true
             push!(quiz.booleans, QuestionTrueFalse(tag=tag, question=question, right=answer))
-        elseif type == text
-            answer = parse(String, content(find_element(xquestion, "text")))
+        elseif type == shorttext
+            answer_root = find_element(xquestion, "answer")
+            option = find_element(answer_root, "option")
+            answer = content(find_element(option, "text"))
             push!(quiz.texts, QuestionText(tag=tag, question=question, answer=answer))
         elseif type == multiple
             answer = find_element(xquestion, "answer")
@@ -203,10 +205,11 @@ function save_question_moodle!(xquestion, question::QuestionEssay, penalty)
     return
 end
 
-function save_question_moodle!(xquestion, question::Text, penalty)
+function save_question_moodle!(xquestion, question::QuestionText, penalty)
     answer = new_child(xquestion, "answer")
     set_attribute(answer, "fraction", "100")
     text = new_child(answer, "text")
+    add_text(text, question.answer)
     return
 end
 
@@ -318,6 +321,7 @@ function save_to_moodle_category(quiz::Quiz, category::AbstractString; penalty_o
     multiples = quiz.multiples
     essays = quiz.essays
     booleans = quiz.booleans
+    texts = quiz.texts
 
     if (penalty_boolean != 0)
         options = [get_msg("true"), get_msg("false")]
@@ -350,6 +354,14 @@ function save_to_moodle_category(quiz::Quiz, category::AbstractString; penalty_o
         for (posi,option) in enumerate(question.options)
             add_answer_moodle(xquestion, option, right = (posi in question.rights), penalty=penalty)
         end
+    end
+
+    for (i, question) in enumerate(texts)
+        if question.tag != category
+            continue
+        end
+
+        xquestion = create_header_question_moodle(xroot, question, i)
     end
 
     for (i, question) in enumerate(essays)
@@ -431,6 +443,20 @@ function get_truefalse_question(line)
     return line[1:end-1]
 end
 
+function get_short_question(line)
+    pos = findfirst('[', line)
+    return strip(line[1:pos-1])
+end
+
+function get_short_answer(line)
+    m=match(r"\[(.*)\]", line)
+    answer = strip(m.captures[1])
+    return answer
+end
+
+
+
+
 function get_essay_question(line)
     return line[2:end-1]
 end
@@ -444,7 +470,11 @@ function is_question_true(line)
 end
 
 function is_question_options(line)
-    return !endswith(line, r"[–+-]") && !startswith(line, r"[–+-]")
+    return !endswith(line, r"[\]–+-]") && !startswith(line, r"[\[–+-]")
+end
+
+function is_question_short(line)
+    return endswith(line, "]") && !startswith(line, r"[\[–+-]")
 end
 
 function is_option(line)
@@ -484,6 +514,7 @@ function read_txt(io::IO)::Quiz
     booleanQuestions = QuestionTrueFalse[]
     questions = QuestionMultiple[]
     essays = QuestionEssay[]
+    texts = QuestionText[]
 
     for line in readlines(io)
         line = strip(line)
@@ -541,6 +572,10 @@ function read_txt(io::IO)::Quiz
             if occursin(r"\b[ABCDEF]\b", line)
                 shuffle = false
             end
+        elseif is_question_short(line)
+            push!(texts, QuestionText(tag=category,
+                                                      question=get_short_question(line),
+                                                      answer=get_short_answer(line)))
         elseif is_question_options(line)
             if !isempty(options)
                 save_question!(questions, category, question, options, trues, shuffle)
@@ -564,5 +599,5 @@ function read_txt(io::IO)::Quiz
         save_question!(questions, category, question, options, trues, shuffle)
     end
 
-    return Quiz(categories=categories, multiples=questions, essays=essays, booleans=booleanQuestions)
+    return Quiz(categories=categories, multiples=questions, essays=essays, booleans=booleanQuestions, texts=texts)
 end

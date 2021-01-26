@@ -107,6 +107,34 @@ Pregunta Buena.
     @test question.question =="Pregunta 2"
 end
 
+@testset "Reading text" begin
+    content = """
+Pregunta Buena.
+- Opción 1.
++ Opción 2.
+
+[Pregunta 2]
+
+Pregunta 3 [correcta]
+
+Pregunta Buena.
++ Opción 1.
+"""
+    quiz = read_txt(IOBuffer(content))
+    @test length(quiz.multiples) == 2
+    question = quiz.multiples[1]
+    @test length(question.options)==2
+    @test question.rights == [2]
+    @test length(quiz.texts) == 1
+    question = only(quiz.texts)
+    @test question.answer == "correcta"
+    @test question.question == "Pregunta 3"
+    question = only(quiz.essays)
+    @test question.question =="Pregunta 2"
+end
+
+
+
 @testset "Error in server" begin
     content = """hola. +"""
     quiz = read_txt(IOBuffer(content))
