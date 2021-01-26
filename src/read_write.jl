@@ -4,7 +4,7 @@ using OrderedCollections
 using SimpleTranslations
 using Formatting
 
-@enum QuestionType multiple=1 boolean=2
+@enum QuestionType multiple=1 boolean=2 text=3
 
 @with_kw struct QuestionMultiple
     tag::String
@@ -25,10 +25,17 @@ end
     question::String
 end
 
+@with_kw struct QuestionText
+    tag::String
+    question::String
+    solution::String
+end
+
 @with_kw struct Quiz
     multiples::Vector{QuestionMultiple}=QuestionMultiple[]
     booleans::Vector{QuestionTrueFalse}=QuestionTrueFalse[]
     essays::Vector{QuestionEssay}=QuestionEssay[]
+    texts::Vector{QuestionText}=QuestionText[]
     categories::Vector{String}=String[]
 end
 
@@ -69,10 +76,14 @@ function read_swad(fname::AbstractString)::Quiz
         typestr = attribute(xquestion, "type")
         type::QuestionType = multiple
 
-        if !(typestr in ["uniqueChoice", "TF"])
-            continue
-        elseif typestr == "TF"
+        if typestr == "TF"
             type = boolean
+        elseif typestr == "uniqueChoice"
+            type = multiple
+        elseif typestr == "text"
+            type = text
+        else
+            continue
         end
 
         tags = find_element(xquestion, "tags")
@@ -98,6 +109,9 @@ function read_swad(fname::AbstractString)::Quiz
             answer = parse(Bool, content(find_element(xquestion, "answer")))
             shuffle = true
             push!(quiz.booleans, QuestionTrueFalse(tag=tag, question=question, right=answer))
+        elseif type == text
+            answer = parse(String, content(find_element(xquestion, "text")))
+            push!(quiz.texts, QuestionText(tag=tag, question=question, answer=answer))
         elseif type == multiple
             answer = find_element(xquestion, "answer")
             shuffle = attribute(answer, "shuffle")=="yes"
@@ -135,6 +149,10 @@ end
 
 function get_moodle_type(question::QuestionEssay)
     return "essay"
+end
+
+function get_moodle_type(question::QuestionText)
+    return "shortanswer"
 end
 
 function get_moodle_type(question)
@@ -179,10 +197,19 @@ end
 
 function save_question_moodle!(xquestion, question::QuestionEssay, penalty)
     answer = new_child(xquestion, "answer")
-    set_attribute(answer, "fraction", "0")
+    set_attribute(answer, "fraction", "100")
+    text = new_child(answer, "text")
+    add_text(text, question.answer)
+    return
+end
+
+function save_question_moodle!(xquestion, question::Text, penalty)
+    answer = new_child(xquestion, "answer")
+    set_attribute(answer, "fraction", "100")
     text = new_child(answer, "text")
     return
 end
+
 
 """
 Create the header of a question for Moodle
