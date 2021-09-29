@@ -246,11 +246,26 @@ function create_header_question_moodle(xroot, question, i, penalty=0)
     return xquestion
 end
 
-function add_answer_moodle(xquestion, description::AbstractString; format="html", penalty=0, right::Bool=true)
+function add_answer_moodle(xquestion, description::AbstractString; format="html",
+      num_rights=1, penalty=0, right::Bool=true)
     answer=new_child(xquestion, "answer")
 
     if right
-        fraction = "100"
+       if num_rights == 1
+         fraction = "100"
+      else
+         if num_rights == 2
+            fraction = "50"
+         elseif num_rights == 3
+            fraction = "33.33333"
+         elseif num_rights == 4
+            fraction = "25"
+         elseif num_rights == 5
+            fraction = "20"
+         end
+      end
+    elseif num_rights > 1
+        fraction = "-100"
     elseif penalty == -33
         fraction = "-33.33333"
     else
@@ -352,7 +367,8 @@ function save_to_moodle_category(quiz::Quiz, category::AbstractString; penalty_o
         xquestion = create_header_question_moodle(xroot, question, i)
         # Show the answers
         for (posi,option) in enumerate(question.options)
-            add_answer_moodle(xquestion, option, right = (posi in question.rights), penalty=penalty)
+            add_answer_moodle(xquestion, option, right = (posi in question.rights),
+                              penalty=penalty, num_rights = length(question.rights))
         end
     end
 
