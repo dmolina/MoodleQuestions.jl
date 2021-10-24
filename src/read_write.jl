@@ -261,7 +261,9 @@ function add_answer_moodle(xquestion, description::AbstractString; format="html"
          elseif num_rights == 4
             fraction = "25"
          elseif num_rights == 5
-            fraction = "20"
+             fraction = "20"
+         else
+             println("Fraction not defined: $(num_rights)")
          end
       end
     elseif num_rights > 1
