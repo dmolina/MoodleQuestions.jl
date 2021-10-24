@@ -219,7 +219,7 @@ Create the header of a question for Moodle
 
 create_header_question_moodle(xroot, tag, type)
 """
-function create_header_question_moodle(xroot, question, i, penalty=0)
+function create_header_question_moodle(xdoc, xroot, question, i, penalty=0)
     xquestion = new_child(xroot, "question")
     # Set the type
     set_attribute(xquestion, "type", get_moodle_type(question))
@@ -239,7 +239,13 @@ function create_header_question_moodle(xroot, question, i, penalty=0)
     questiontext = new_child(xquestion, "questiontext")
     set_attribute(questiontext, "format", "html")
     text = new_child(questiontext, "text")
-    add_text(text, "$(question.question)")
+    question_text = question.question
+
+    if contains(question_text, "<p>")
+        add_cdata(xdoc, text, question_text)
+    else
+        add_text(text, question_text)
+    end
 
     save_question_moodle!(xquestion, question, penalty_str)
 
@@ -366,7 +372,7 @@ function save_to_moodle_category(quiz::Quiz, category::AbstractString; penalty_o
             penalty = penalty_options_answer
         end
 
-        xquestion = create_header_question_moodle(xroot, question, i)
+        xquestion = create_header_question_moodle(xdoc, xroot, question, i)
         # Show the answers
         for (posi,option) in enumerate(question.options)
             add_answer_moodle(xquestion, option, right = (posi in question.rights),
@@ -379,7 +385,7 @@ function save_to_moodle_category(quiz::Quiz, category::AbstractString; penalty_o
             continue
         end
 
-        xquestion = create_header_question_moodle(xroot, question, i)
+        xquestion = create_header_question_moodle(xdoc, xroot, question, i)
     end
 
     for (i, question) in enumerate(essays)
@@ -387,7 +393,7 @@ function save_to_moodle_category(quiz::Quiz, category::AbstractString; penalty_o
             continue
         end
 
-        xquestion = create_header_question_moodle(xroot, question, i)
+        xquestion = create_header_question_moodle(xdoc, xroot, question, i)
     end
 
     # Put all the true/false questions
@@ -396,7 +402,7 @@ function save_to_moodle_category(quiz::Quiz, category::AbstractString; penalty_o
             continue
         end
 
-        xquestion = create_header_question_moodle(xroot, question, i)
+        xquestion = create_header_question_moodle(xdoc, xroot, question, i)
 
         # Show the answers
         add_answer_moodle(xquestion, "true", format="moodle_auto_format", right=(question.right==true))
@@ -495,6 +501,26 @@ function is_question_short(line)
     return endswith(line, "]") && !startswith(line, r"[\[–+-]")
 end
 
+function is_start_multiple_question(line)
+    return startswith(line, "`")
+end
+
+function is_end_multiple_question(line)
+    return endswith(line, "`")
+end
+
+function remove_multiple_question_mark(line)
+    return replace(line, "`"=>"")
+end
+
+function convert_multiple_question(line)
+    line = replace(line, "<" => "&lt;")
+    line = replace(line, "\n" => "</p><p>")
+    line = replace(line, "\t" => "&nbsp;&nbsp;&nbsp;&nbsp;")
+    line = replace(line, " " => "&nbsp;")
+    return "<p>" * line * "</p>";
+end
+
 function is_option(line)
     return startswith(line, r"[–+-]")
 end
@@ -533,9 +559,10 @@ function read_txt(io::IO)::Quiz
     questions = QuestionMultiple[]
     essays = QuestionEssay[]
     texts = QuestionText[]
+    multiple = false
 
-    for line in readlines(io)
-        line = strip(line)
+    for line_orig in readlines(io)
+        line = strip(line_orig)
 
         if (isempty(line))
             continue
@@ -556,6 +583,28 @@ function read_txt(io::IO)::Quiz
                 trues = Int32[]
                 shuffle = true
                 question = ""
+            end
+        elseif multiple == true
+            if is_option(line)
+                error(format(get_msg("noquestion_line"), line))
+            end
+            if is_end_multiple_question(line)
+                multiple = false
+            end
+            question *= "\n" *remove_multiple_question_mark(line_orig)
+
+            if multiple == false
+                question = convert_multiple_question(question)
+            end
+        elseif multiple == false && is_start_multiple_question(line)
+            multiple = true
+
+            if !isempty(options)
+                save_question!(questions, category, question, options, trues, shuffle)
+                options = String[]
+                trues = Int32[]
+                shuffle = true
+                question = remove_multiple_question_mark(line)
             end
         elseif is_question_truefalse(line) || is_question_essay(line)
 
