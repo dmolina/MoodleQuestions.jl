@@ -1,7 +1,7 @@
 name = "MoodleQuestions"
 uuid = "e6233ccc-e36c-49e3-ac71-1ad7b6c78055"
 authors = ["Daniel Molina"]
-version = "0.2.4"
+version = "0.2.5"
 
 [deps]
 Formatting = "59287772-0a20-5a39-b81b-1366585eb4c0"
@@ -14,8 +14,8 @@ Sockets = "6462fe0b-24de-5631-8697-dd941f90decc"
 ZipFile = "a5390f91-8eb1-5f08-bee0-b1d1ffed6cea"
 
 [compat]
-HTTP = "0.8.14"
 Formatting = "0.4.1"
+HTTP = "0.8.14, 0.9"
 LightXML = "0.8.1, 0.9"
 OrderedCollections = "1.1.0"
 Parameters = "0.12.0"

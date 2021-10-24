@@ -17,6 +17,20 @@ The option with *+* is the true one, the other ones are false.
 > + Covid-19.
 > - Cold.
 
+By default the question is expected to have only one paragraph. If it is not the
+case, it can be surround by symbol `.
+
+
+**Example:**
+
+> `Who said the following question:
+> 
+> "I have no special talent. I am only passionately curious."
+>
+> - Descartes.
+> + Albert Einstein.
+> - Plato.
+
 ## True/False questions
 
 The true/false questions are described with a sentence finished in *-* (if the 
@@ -37,7 +51,6 @@ parentheses.
 **Example:**
 
 > (Why the confinement reduce the spread of the virus)
-
 
 ## Categories
 
