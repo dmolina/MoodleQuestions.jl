@@ -99,7 +99,7 @@ function handle(req::HTTP.Request)
     content = get(params, "text", "")
 
     try
-        quiz = read_txt(IOBuffer(content))
+       quiz = read_txt(IOBuffer(content))
        dir = mktempdir()
     # Save quiz to temp dir
     save_to_moodle(quiz, joinpath(dir, "quiz.xml"), penalty_options=penalty_options, penalty_boolean=penalty_boolean)
@@ -130,12 +130,11 @@ function handle(req::HTTP.Request)
 
     open(fname) do file
         content = read(file, String)
-    end
-
-    headers = ["Pragma" => "public", "Expires" => "0", "Content-Description" => "File Transfer",
+        headers = ["Pragma" => "public", "Expires" => "0", "Content-Description" => "File Transfer",
                     "Content-type" => content_type, "Content-Transfer-Encoding" => "binary",
                "Content-Length" => "$(sizeof(content))", "Content-Disposition" => "attachment; filename=\"$(filename)\""]
         return HTTP.Response(200, headers, body=content)
+    end
 
     catch e
         if (:msg in propertynames(e))
@@ -156,11 +155,12 @@ If there is only one category only one parameter is defined.
 serve_quiz(port)
 """
 function serve_quiz(port = 8100)
-    router = HTTP.Router()
     fmessages = joinpath(dirname(pathof(MoodleQuestions)), "messages.ini")
     loadmsgs!(fmessages, strict_mode=true)
-    HTTP.@register(router, "POST", "/*", handle)
-    HTTP.serve(router, Sockets.getipaddr(), port)
+    HTTP.serve(handle, Sockets.getipaddr(), port)
+    # router = HTTP.Router()
+    # HTTP.register!(router, "POST", "/*", handle)
+    # HTTP.serve(router, Sockets.getipaddr(), port)
 end
 
 function test_serve(port = 8080)
