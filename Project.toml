@@ -15,7 +15,7 @@ ZipFile = "a5390f91-8eb1-5f08-bee0-b1d1ffed6cea"
 
 [compat]
 Formatting = "0.4.1"
-HTTP = "0.8.14, 0.9, 1.0"
+HTTP = "1.0"
 LightXML = "0.8.1, 0.9"
 OrderedCollections = "1.1.0"
 Parameters = "0.12.0"
