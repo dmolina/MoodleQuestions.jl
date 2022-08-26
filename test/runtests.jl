@@ -3,7 +3,7 @@ using Test
 
 @testset "ReadFromSWAD" begin
     quiz = read_swad("../input_data/test_swad.xml")
-    @test quiz != nothing
+    @test !isnothing(quiz)
     @test length(quiz.multiples)==419
     @test quiz.multiples[1].shuffle == false
     @test quiz.multiples[3].shuffle == true
