@@ -12,7 +12,7 @@ reduced. Due to the covid-19, the classrooms are getting more virtual at my
 University, and the moodle is getting more usage.
 
 Create Questions in Moodle is a bit tedious, so I have created a import function
-from a text file. 
+from a text file.
 
 ## Limitations
 
@@ -34,7 +34,7 @@ Pkg.add("https://github.com/dmolina/MoodleQuestions")
 
 ## Import functionality
 
-It is able to read SWAD (swad.ugr.es) and a text file format. 
+It is able to read SWAD (swad.ugr.es) and a text file format.
 
 The functionality of import is done by functions:
 
@@ -42,19 +42,19 @@ The functionality of import is done by functions:
 function read_txt(fname::AbstractString)::Quiz
 ```
 
-when fname is the input data, and return a Quiz structure. 
+when fname is the input data, and return a Quiz structure.
 fname must be in the format described in next section.
 
 ```julia
 read_swad(fname::AbstractString)::Quiz
 ```
 
-when fname is the input data, and return a Quiz structure. 
+when fname is the input data, and return a Quiz structure.
 
 ## Input text file format
 
 This package is able to read a text file. The format has been designed to be as
-simple and readable as possible. 
+simple and readable as possible.
 
 ```text
 * Category 1
@@ -76,21 +76,21 @@ previous question. The *-* means that the answer is false, and the *+* means
 that the sentence is the right answer.
 
 The answers in the question are shuffle, except when one of the word of *A*,
-*B*, ... is used. 
+*B*, ... is used.
 
 In [`Instructions`](@ref format) you can see more details.
 
 ## Export functionality
 
-It is able to export to the MoodleXML format. 
+It is able to export to the MoodleXML format.
 
-This functionality is done by function 
+This functionality is done by function
 
 ```julia
 save_to_moodle(quiz::Quiz, template::AbstractString)
 ```
 
-When template is the output filename (with .xml extension). 
+When template is the output filename (with .xml extension).
 
 Actually, due to problem importing in moodle, it creates a XML file for each
 category. Thus, if template is "output.xml" and the Quiz has categories "Cat1"

@@ -1,12 +1,12 @@
 # [Format](@id format)
 
-The syntax is very simple, in text mode. Spaces are not taken in accounr. 
+The syntax is very simple, in text mode. Spaces are not taken in accounr.
 They are composed of the following types of questions:
 
 ## Questions with Options (Only and multiple)
 
-The short questions are listed without any initial symbol. After each question, 
-there are the different possible options, preceded each one with a *-* or *+*. 
+The short questions are listed without any initial symbol. After each question,
+there are the different possible options, preceded each one with a *-* or *+*.
 The option with *+* is the true one, the other ones are false.
 
 **Example:**
@@ -24,7 +24,7 @@ case, it can be surround by symbol `.
 **Example:**
 
 > `Who said the following question:
-> 
+>
 > "I have no special talent. I am only passionately curious."
 >
 > - Descartes.
@@ -33,7 +33,7 @@ case, it can be surround by symbol `.
 
 ## True/False questions
 
-The true/false questions are described with a sentence finished in *-* (if the 
+The true/false questions are described with a sentence finished in *-* (if the
 right answer is *False*) or finished in *+* i(if the right answer is *True*).
 
 **Example:**
