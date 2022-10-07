@@ -161,7 +161,7 @@ function serve_quiz(; ip=nothing, port = 8100)
     if ip == "localhost"
         ip = Sockets.localhost
     elseif isnothing(ip)
-        ip = Sockets.getipaddr()
+        ip = ip"0.0.0.0"
     end
 
     println("Accepting requests from $(ip):$(port)")
