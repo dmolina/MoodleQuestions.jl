@@ -154,15 +154,18 @@ If there is only one category only one parameter is defined.
 
 serve_quiz(port)
 """
-function serve_quiz(port = 8100)
+function serve_quiz(; ip=nothing, port = 8100)
     fmessages = joinpath(dirname(pathof(MoodleQuestions)), "messages.ini")
     loadmsgs!(fmessages, strict_mode=true)
-    myip = Sockets.getipaddrs() |> first
-    HTTP.serve(handle, myip, port)
-    # HTTP.serve(handle, Sockets.getipaddr(), port)
-    # router = HTTP.Router()
-    # HTTP.register!(router, "POST", "/*", handle)
-    # HTTP.serve(router, Sockets.getipaddr(), port)
+
+    if ip == "localhost"
+        ip = Sockets.localhost
+    elseif isnothing(ip)
+        ip = Sockets.getipaddr()
+    end
+
+    println("Accepting requests from $(ip):$(port)")
+    HTTP.serve(handle, ip, port)
 end
 
 function test_serve(port = 8080)
