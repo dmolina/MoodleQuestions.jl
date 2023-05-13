@@ -315,7 +315,7 @@ Save the quiz into a group of categories.
 
     save_to_moodle(quiz::Quiz, category::AbstractString)
 """
-function save_to_moodle_category(quiz::Quiz, category::AbstractString; penalty_options=0, penalty_boolean=0)
+function save_to_moodle_category(quiz::Quiz, category::AbstractString; penalty_options=0, penalty_boolean=0, multiple=false)
     xdoc = XMLDocument()
     # Create test
     xroot = create_root(xdoc, "quiz")
@@ -346,7 +346,7 @@ function save_to_moodle_category(quiz::Quiz, category::AbstractString; penalty_o
     booleans = quiz.booleans
     texts = quiz.texts
 
-    if (penalty_boolean != 0)
+    if (penalty_boolean != 0 || multiple)
         options = [get_msg("true"), get_msg("false")]
 
         for question in booleans
@@ -412,7 +412,7 @@ function save_to_moodle_category(quiz::Quiz, category::AbstractString; penalty_o
     return xdoc
 end
 
-function save_to_moodle(quiz::Quiz, template::AbstractString; penalty_options=0, penalty_boolean=0)
+function save_to_moodle(quiz::Quiz, template::AbstractString; penalty_options=0, penalty_boolean=0, multiple=false)
     for category in quiz.categories
         fname = replace(template, ".xml" => "_$(category).xml")
         fname = replace(fname, " " => "_")
