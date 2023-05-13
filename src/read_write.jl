@@ -417,7 +417,7 @@ function save_to_moodle(quiz::Quiz, template::AbstractString; penalty_options=0,
         fname = replace(template, ".xml" => "_$(category).xml")
         fname = replace(fname, " " => "_")
         xdoc = save_to_moodle_category(quiz, category, penalty_options=penalty_options,
-                                       penalty_boolean=penalty_boolean)
+                                       penalty_boolean=penalty_boolean, multiple=multiple)
         save_file(xdoc, fname)
     end
 end

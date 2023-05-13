@@ -88,7 +88,7 @@ function handle(req::HTTP.Request)
     params = get_params(req)
     penalty_boolean = tryparse(Float32, get(params, "penalty_boolean", "0"))
     penalty_options = tryparse(Float32, get(params, "penalty_options", "0"))
-    multiple::Bool = tryparse(Bool, get(params, "multiple", "0"))
+    multiple = get(params, "multiple", "off") == "on"
 
     language = get(params, "language", "es")
     set_language!(language)
@@ -103,7 +103,7 @@ function handle(req::HTTP.Request)
        quiz = read_txt(IOBuffer(content))
        dir = mktempdir()
     # Save quiz to temp dir
-    save_to_moodle(quiz, joinpath(dir, "quiz.xml"), penalty_options, penalty_boolean, multiple)
+    save_to_moodle(quiz, joinpath(dir, "quiz.xml"); penalty_options, penalty_boolean, multiple)
     # Get list
     files = readdir(dir, join=true)
 
