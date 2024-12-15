@@ -133,7 +133,31 @@ Pregunta Buena.
     @test question.question =="Pregunta 2"
 end
 
+@testset "Error with many answers" begin
+    content = """
 
+* Categoría NPS
+
+En que medida recomendarías este sistema a un amigo (0=Jamás y 10=Siempre)
+- No deseo contestar
++ 1
++ 2
++ 3
++ 4
++ 5
++ 6
++ 7
++ 8
++ 9
++ 10  
+
+"""
+    quiz = read_txt(IOBuffer(content))
+    @test length(quiz.multiples) == 1
+    question = quiz.multiples[1]
+    @test length(question.options)==11
+    @test length(question.rights) == 10
+end
 
 @testset "Error in server" begin
     content = """hola. +"""

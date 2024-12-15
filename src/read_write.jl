@@ -2,7 +2,6 @@ using Parameters
 using LightXML
 using OrderedCollections
 using SimpleTranslations
-using Formatting
 
 @enum QuestionType multiple=1 boolean=2 shorttext=3
 
@@ -268,6 +267,8 @@ function add_answer_moodle(xquestion, description::AbstractString; format="html"
             fraction = "25"
          elseif num_rights == 5
              fraction = "20"
+         elseif num_rights == 10
+             fraction = "10"
          else
              println("Fraction not defined: $(num_rights)")
          end
